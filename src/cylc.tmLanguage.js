@@ -14,18 +14,17 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-function reEnumerateKeys(obj, incr) {
-    // For an Object obj with indexed keys (i.e. the keys are '1', '2', '3' etc), add a number to the keys and return new Object
-    const out = {};
-    for (let key in obj) {
-        let i = parseInt(key);
-        out[i + incr] = obj[key];
-    }
-    return out;
-}
-
-function getLength(obj) {
-    return Object.keys(obj).length;
+/**
+ * Convert an array of values to an object with keys 1, 2, 3, etc.
+ *
+ * @param {Object[]} entries
+ * @param {number=} start
+ * @returns {Record<number, Object>}
+ */
+function capturesFromValues(entries, start = 1) {
+    return Object.fromEntries(
+        entries.map((entry, i) => [i + start, entry])
+    );
 }
 
 
@@ -292,7 +291,6 @@ class GraphSection8 extends GraphSection7 {
 class GraphSyntax {
     constructor() {
         const task = new Task();
-        const qualifier = new TaskQualifier();
         this.patterns = [
             {include: '#comments'},
             {include: '#parameterizations'},
@@ -325,16 +323,8 @@ class GraphSyntax {
                 match: `(?<=^|[\\s&>])(!)(${task.regex})`,
                 captures: {
                     1: {name: 'keyword.other.suicide.cylc'},
-                    2: {name: task.pattern.name},
+                    2: {name: task.name},
                 }
-            },
-            {
-                name: 'keyword.other.optional-output.cylc',
-                match: [
-                    `(?<=(${task.regex}|${qualifier.regex}|<.*>) *)`,
-                    `\\?`,
-                    `(?![:\\w])`,
-                ].join('')
             },
             {
                 name: 'variable.other.xtrigger.cylc',
@@ -347,33 +337,6 @@ class GraphSyntax {
                 name: 'constant.character.escape.continuation.cylc',
                 match: '\\\\'
             },
-            new TaskQualifier().pattern,
-            {
-                name: 'meta.annotation.inter-cycle.cylc',
-                comment: 'e.g. foo[-P1]',
-                begin: '(?<=\\S)\\[',
-                end: '\\]',
-                beginCaptures: {
-                    0: {name: 'punctuation.section.brackets.begin.cylc'}
-                },
-                endCaptures: {
-                    0: {name: 'punctuation.section.brackets.end.cylc'}
-                },
-                patterns: [
-                    {include: '#jinja2'},
-                    {include: '#intervals'},
-                    {include: '#isodatetimes'},
-                    {
-                        comment: 'If 1st char is ^ (allowing for spaces)',
-                        match: '\\G[\\t ]*(\\^)',
-                        captures: {
-                            1: {name: 'constant.language.cycle-point.cylc'}
-                        }
-                    },
-                    new ArithmeticOperator().pattern,
-                    new IntegerPoint().pattern,
-                ]
-            },
         ];
     }
 }
@@ -381,16 +344,32 @@ class GraphSyntax {
 
 class Task {
     constructor() {
+        const qualifier = new TaskQualifier();
+        const optionalOutput = new OptionalOutput();
+        const interCycle = new InterCycleDep();
+
+        this.name = 'meta.variable.task.cylc';
+        this.regex = `\\b\\w[\\w\\+\\-@%]*`;
         this.pattern = {
-            name: 'meta.variable.task.cylc',
-            match: `${this.regex = `\\b\\w[\\w\\+\\-@%]*`}`
+            match: [
+                `(${this.regex})`,
+                `${interCycle.regex}?`,
+                `${qualifier.regex}?`,
+                `${optionalOutput.regex}?`,
+            ].join(''),
+            captures: capturesFromValues([
+                {name: this.name},
+                ...Object.values(interCycle.pattern.captures),
+                ...Object.values(qualifier.pattern.captures),
+                {name: optionalOutput.name},
+            ]),
         };
     }
 }
 class TaskQualifier {
     constructor() {
         this.pattern = {
-            comment: 'e.g. foo:fail => bar',
+            comment: 'e.g. foo:fail',
             match: `(?<!^|[\\s:])${this.regex = `((:)([\\w\\-]+))`}`,
             captures: {
                 1: {name: 'meta.annotation.qualifier.cylc'},
@@ -400,21 +379,82 @@ class TaskQualifier {
         };
     }
 }
+class OptionalOutput {
+    constructor() {
+        this.name = 'keyword.other.optional-output.cylc';
+        this.regex = [
+            `\\s*(`,
+                `\\?`,
+                `(?![:\\w])`, // disallow in middle of task name or before qualifier
+            `)`,
+        ].join('');
+    }
+}
+class InterCycleDep {
+    constructor() {
+        this.name = 'meta.annotation.inter-cycle.cylc';
+        this.regex = [
+            `(`,
+                `(\\[)`,
+                    `([^\\]]+)`,
+                `(\\])`,
+            `)`,
+        ].join('');
+        this.pattern = {
+            comment: 'e.g. foo[-P1]',
+            captures: {
+                1: {name: this.name},
+                2: {name: 'punctuation.section.brackets.begin.cylc'},
+                3: {
+                    name: this.name,
+                    patterns: [
+                        {include: '#jinja2'},
+                        {include: '#intervals'},
+                        {include: '#isodatetimes'},
+                        {
+                            comment: 'Initial cycle point',
+                            match: '\\^',
+                            captures: {
+                                0: {name: 'constant.language.cycle-point.cylc'}
+                            }
+                        },
+                        new ArithmeticOperator().pattern,
+                        new IntegerPoint().pattern,
+                    ]
+                },
+                4: {name: 'punctuation.section.brackets.end.cylc'},
+            },
+        };
+    }
+}
 
 
 class Parameterization {
     constructor() {
         const task = new Task();
+        const qualifier = new TaskQualifier();
+        const optionalOutput = new OptionalOutput();
+        const interCycle = new InterCycleDep();
+
         this.pattern = {
             name: 'meta.annotation.parameterization.cylc',
             begin: '<',
-            end: '>',
+            end: [
+                `(>)`,
+                `${interCycle.regex}?`,
+                `${qualifier.regex}?`,
+                `${optionalOutput.regex}?`,
+
+            ].join(''),
             beginCaptures: {
                 0: {name: 'punctuation.definition.annotation.begin.cylc'}
             },
-            endCaptures: {
-                0: {name: 'punctuation.definition.annotation.end.cylc'}
-            },
+            endCaptures: capturesFromValues([
+                {name: 'punctuation.definition.annotation.end.cylc'},
+                ...Object.values(interCycle.pattern.captures),
+                ...Object.values(qualifier.pattern.captures),
+                {name: optionalOutput.name},
+            ]),
             patterns: [
                 {include: '#jinja2'},
                 {
@@ -433,7 +473,7 @@ class Parameterization {
                         {
                             match: `(?<=::)(${task.regex})`,
                             captures: {
-                                1: {name: task.pattern.name},
+                                1: {name: task.name},
                             }
                         },
                         new TaskQualifier().pattern,
@@ -515,15 +555,15 @@ class IsoTimeLong {
         this.pattern = {
             name: 'constant.numeric.isotime.long.cylc',
             match: `\\b${this.regex = `(T)(\\d{2})(?:(:)(\\d{2}))?(?:(:)(\\d{2}))?${timeZone.regex}?`}\\b`,
-            captures: {
-                1: {name: 'punctuation.definition.time.cylc'},
-                2: {name: 'constant.numeric.hour.cylc'},
-                3: {name: 'punctuation.separator.time.cylc'},
-                4: {name: 'constant.numeric.min.cylc'},
-                5: {name: 'punctuation.separator.time.cylc'},
-                6: {name: 'constant.numeric.sec.cylc'},
-                ...reEnumerateKeys(timeZone.pattern.captures, 6),
-            }
+            captures: capturesFromValues([
+                {name: 'punctuation.definition.time.cylc'},
+                {name: 'constant.numeric.hour.cylc'},
+                {name: 'punctuation.separator.time.cylc'},
+                {name: 'constant.numeric.min.cylc'},
+                {name: 'punctuation.separator.time.cylc'},
+                {name: 'constant.numeric.sec.cylc'},
+                ...Object.values(timeZone.pattern.captures),
+            ])
         };
     }
 }
@@ -533,13 +573,13 @@ class IsoTimeShort {
         this.pattern = {
             name: 'constant.numeric.isotime.short.cylc',
             match: `\\b${this.regex = `(T)(\\d{2})(\\d{2})?(\\d{2})?${timeZone.regex}?`}\\b`,
-            captures: {
-                1: {name: 'punctuation.definition.time.cylc'},
-                2: {name: 'constant.numeric.hour.cylc'},
-                3: {name: 'constant.numeric.min.cylc'},
-                4: {name: 'constant.numeric.sec.cylc'},
-                ...reEnumerateKeys(timeZone.pattern.captures, 4),
-            }
+            captures: capturesFromValues([
+                {name: 'punctuation.definition.time.cylc'},
+                {name: 'constant.numeric.hour.cylc'},
+                {name: 'constant.numeric.min.cylc'},
+                {name: 'constant.numeric.sec.cylc'},
+                ...Object.values(timeZone.pattern.captures),
+            ])
         };
     }
 }
@@ -580,10 +620,10 @@ class IsoDateTimeLong {
         this.pattern = {
             name: 'constant.numeric.isodatetime.long.cylc',
             match: `\\b${this.regex = `${date.regex}(?:${time.regex})?`}\\b`,
-            captures: {
-                ...date.pattern.captures,
-                ...reEnumerateKeys(time.pattern.captures, getLength(date.pattern.captures)),
-            }
+            captures: capturesFromValues([
+                ...Object.values(date.pattern.captures),
+                ...Object.values(time.pattern.captures),
+            ])
         };
     }
 }
@@ -594,10 +634,10 @@ class IsoDateTimeShort {
         this.pattern = {
             name: 'constant.numeric.isodatetime.short.cylc',
             match: `\\b${this.regex = `${date.regex}(?:${time.regex})?`}\\b`,
-            captures: {
-                ...date.pattern.captures,
-                ...reEnumerateKeys(time.pattern.captures, getLength(date.pattern.captures)),
-            }
+            captures: capturesFromValues([
+                ...Object.values(date.pattern.captures),
+                ...Object.values(time.pattern.captures),
+            ])
         };
     }
 }
@@ -681,13 +721,13 @@ class IntervalIso {
             name: 'constant.numeric.interval.iso.cylc',
             comment: `e.g. P1Y1M1DT1H1M1S, P1D, PT1M. (P(?=(?:\\d|T\\d))) captures P only if followed by a digit or T. (?:\\d+(Y))? matches e.g. 1Y zero or more times, etc.`,
             match: `\\b${this.regex = `(P(?=(?:\\d|T\\d)))(?:\\d+(Y))?(?:\\d+(M))?(?:\\d+(D))?(?:${time.regex})?`}\\b`,
-            captures: {
-                1: {name: 'punctuation.definition.period.cylc'},
-                2: {name: 'punctuation.definition.year.cylc'},
-                3: {name: 'punctuation.definition.month.cylc'},
-                4: {name: 'punctuation.definition.day.cylc'},
-                ...reEnumerateKeys(time.pattern.captures, 4),
-            }
+            captures: capturesFromValues([
+                {name: 'punctuation.definition.period.cylc'},
+                {name: 'punctuation.definition.year.cylc'},
+                {name: 'punctuation.definition.month.cylc'},
+                {name: 'punctuation.definition.day.cylc'},
+                ...Object.values(time.pattern.captures),
+            ])
         };
     }
 }

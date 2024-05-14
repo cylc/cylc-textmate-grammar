@@ -30,9 +30,14 @@ graph = """
 #            ^           ^^^ ^  variable.parameter.cylc
 #              ^                keyword.operator.assignment.cylc
 #                ^              constant.numeric.cylc
-#                           ^   punctuation.separator.parameter.cylc
-#                            ^  variable.parameter.cylc
 
+## With inter-cycle dependencies, qualifiers & optional output
+    a<b>[-P1]:c?
+#    ^^^         meta.annotation.parameterization.cylc
+#     ^          variable.parameter.cylc
+#       ^^^^^    meta.annotation.inter-cycle.cylc
+#            ^^  meta.annotation.qualifier.cylc
+#              ^ keyword.other.optional-output.cylc
 
 ## With Jinja
     foo<{{ a }}>
