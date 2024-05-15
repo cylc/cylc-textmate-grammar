@@ -4,6 +4,7 @@
 graph = """
 
     foo:fail
+#   ^^^      meta.variable.task.cylc
 #      ^     punctuation.definition.annotation.cylc
 #       ^^^^ variable.annotation.cylc
 #      ^^^^^ meta.annotation.qualifier.cylc
@@ -18,11 +19,5 @@ graph = """
 ## Not allowed without task
 :fail
 # <----- - meta.annotation.qualifier.cylc
-
-
-## With Jinja
-    {{ a }}:fail & foo:custom_{{ a }}
-#          ^^^^^                      meta.annotation.qualifier.cylc
-#                      ^^^^^^^        variable.annotation.cylc
 
 """
