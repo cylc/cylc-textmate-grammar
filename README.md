@@ -20,7 +20,7 @@ If you're using an editor listed above, follow the link next to it for instructi
 
 ## Copyright and Terms of Use
 
-Copyright (C) 2008-<span actions:bind='current-year'>2025</span> NIWA & British Crown (Met Office) & Contributors.
+Copyright (C) 2008-<span actions:bind='current-year'>2026</span> NIWA & British Crown (Met Office) & Contributors.
 
 [![License](https://img.shields.io/github/license/cylc/cylc-textmate-grammar.svg?color=lightgrey)](https://github.com/cylc/cylc-textmate-grammar/blob/master/LICENSE)
 
