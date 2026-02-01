@@ -20,7 +20,7 @@
   "devDependencies": {
     "@eslint/js": "^9.1.1",
     "eslint": "^9.1.1",
-    "globals": "^16.0.0",
+    "globals": "^17.3.0",
     "vscode-tmgrammar-test": "^0.1.1"
   }
 }
