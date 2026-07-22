@@ -281,7 +281,9 @@ class GraphSection8 extends GraphSection7 {
                         2: {name: 'keyword.operator.assignment.cylc'},
                     },
                     patterns: inherit.patterns
-                }
+                },
+                {include: '#jinja2'},
+                {include: '#includeFiles'},
             ]
         };
     }

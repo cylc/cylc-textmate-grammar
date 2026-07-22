@@ -65,7 +65,15 @@ a = """
 #   ^^^^^^^ meta.embedded.block.jinja source.jinja
 """
 
-graph = """
+## Inside Cylc graph sections
+[scheduling]
+[[graph]]
+
+    {% for date in DATES %}
+#   ^^^^^^^^^^^^^^^^^^^^^^^ meta.graph-section.cylc meta.embedded.block.jinja source.jinja
+
+    R/P5D = """
+#   ^^^^^^^^^^^ meta.graph-section.cylc
     {{ a }}
 #   ^^^^^^^ meta.embedded.block.jinja source.jinja
 
@@ -88,12 +96,23 @@ graph = """
 #       ^^^^^^^          ^^^^^^^  meta.embedded.block.jinja source.jinja
 """
 
-[[graph]]
     {{ a }} = foo => bar
 #   ^^^^^^^              meta.embedded.block.jinja source.jinja
+#           ^            keyword.operator.assignment.cylc
+#             ^^^^^^^^^^ meta.graph-syntax.unquoted.cylc
 
 [scheduler]
 ## Inside a Cylc comment (it still gets executed at parse-time)
     # blah {% set x = 14 %} blah {{ x }}
 #   ^^^^^^^                ^^^^^^        comment.line.cylc
 #          ^^^^^^^^^^^^^^^^      ^^^^^^^ meta.embedded.block.jinja source.jinja
+[scheduling]
+[[graph]]
+    # {{ x }}
+#   ^^        comment.line.cylc
+#     ^^^^^^^ meta.embedded.block.jinja source.jinja
+    R6 = """
+        # {{ x }}
+#       ^^        comment.line.cylc
+#         ^^^^^^^ meta.embedded.block.jinja source.jinja
+    """
