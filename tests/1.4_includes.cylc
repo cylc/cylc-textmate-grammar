@@ -18,5 +18,11 @@
 #   ^^^^^^^^         keyword.control.include.cylc
     %include foo {{ a }} bar
 #   ^^^^^^^^                 keyword.control.include.cylc
-#            ^^^             string.cylc
-#                        ^^^ string.cylc
+#            ^^^         ^^^ string.cylc
+
+## Inside a graph section
+[[scheduling]]
+    [[graph]]
+        %include bar
+#       ^^^^^^^^     keyword.control.include.cylc
+#       ^^^^^^^^^^^^ meta.include.cylc
