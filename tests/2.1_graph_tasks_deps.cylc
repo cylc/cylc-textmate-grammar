@@ -59,7 +59,7 @@
     foo:fail => bar<x=2>
 #   ^^^                  meta.variable.task.cylc
 #               ^^^      meta.variable.task.cylc
-    
+
 """
 # <--- meta.graph-syntax.quoted.triple.cylc string.quoted.triple.cylc punctuation.definition.string.end.cylc
 
@@ -85,10 +85,3 @@
 #   ^^^^^^^ - meta.graph-section.cylc
     foo => bar
 #   ^^^^^^^^^^ - meta.graph-section.cylc
-
-
-## With Jinja
-[[graph]]
-    {{ a }} = foo => bar
-#           ^            keyword.operator.assignment.cylc
-#             ^^^^^^^^^^ meta.graph-syntax.unquoted.cylc

@@ -6,7 +6,6 @@ This repository provides a TextMate grammar for Cylc workflow configuration (`su
 
 `cylc.tmLanguage.json` is the grammar file used by plugins for editors:
 - VSCode - [cylc/vscode-cylc](https://github.com/cylc/vscode-cylc)
-- Atom - [cylc/language-cylc](https://github.com/cylc/language-cylc)
 
 It is also used to build a TextMate bundle at [cylc/Cylc.tmLanguage](https://github.com/cylc/Cylc.tmbundle/) which is compatible with:
 - TextMate
@@ -20,7 +19,7 @@ If you're using an editor listed above, follow the link next to it for instructi
 
 ## Copyright and Terms of Use
 
-Copyright (C) 2008-<span actions:bind='current-year'>2026</span> NIWA & British Crown (Met Office) & Contributors.
+Copyright (C) 2008-<span actions:bind='current-year'>2026</span> Earth Sciences New Zealand & British Crown (Met Office) & Contributors.
 
 [![License](https://img.shields.io/github/license/cylc/cylc-textmate-grammar.svg?color=lightgrey)](https://github.com/cylc/cylc-textmate-grammar/blob/master/LICENSE)
 
@@ -44,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 If you are new to TextMate grammars, there are a number of resources to look at:
 - [TextMate manual - language grammars](https://macromates.com/manual/en/language_grammars)
 - [VSCode syntax highlight guide](https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide)
-- [Atom flight manual - creating a legacy TextMate grammar](https://flight-manual.atom.io/hacking-atom/sections/creating-a-legacy-textmate-grammar/)
+- [Atom flight manual - creating a legacy TextMate grammar](https://web.archive.org/web/20221215062546/https://flight-manual.atom.io/hacking-atom/sections/creating-a-legacy-textmate-grammar/)
 
 ### Modifying the grammar
 
@@ -158,12 +157,14 @@ npm install
 ```
 
 #### Style tests
+
 To run ESLint for style testing JavaScript files:
 ```
 npm run lint
 ```
 
 #### Unit tests
+
 We're using [vscode-tmgrammar-test](https://github.com/PanAeon/vscode-tmgrammar-test) for testing the textmate grammar. Test files reside in the `/tests` directory. These are essentially Cylc workflow files that are annotated with comments. The comments detail what the expected scopes of the test line are. The comments are read in by vscode-tmgrammar-test and compared to the actual applied scopes. An example test might be:
 ```ini
     foo = bar
